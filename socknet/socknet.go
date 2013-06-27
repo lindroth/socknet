@@ -19,7 +19,8 @@ func setHeader(flags *string) http.Header {
 	header := http.Header{}
 
 	for _, flag := range strings.Split(*flags, ",") {
-		value := strings.Split(flag, "=")
+		value := strings.Split(flag, ":")
+
 		if len(value) == 2 {
 			fmt.Printf("flags %s = %s\n", value[0], value[1])
 			header.Add(value[0], value[1])
@@ -30,7 +31,7 @@ func setHeader(flags *string) http.Header {
 }
 
 func main() {
-	headerFlags := flag.String("header", "", "X-MyHeader=123,X-MyOtherHeader=654")
+	headerFlags := flag.String("header", "", "X-MyHeader:123,X-MyOtherHeader:654")
 	flag.Parse()
 	header := setHeader(headerFlags)
 
