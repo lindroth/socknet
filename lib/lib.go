@@ -27,20 +27,26 @@ func (self *Socknet) Connect(origin string, location string, header http.Header)
 	output = make(chan string)
 
 	go func() {
+		defer func() {
+			close(output)
+			ws.Close()
+		}()
 		for mess := range input {
-			if _, err := ws.Write([]byte(mess)); err != nil {
+			if err := websocket.Message.Send(ws, mess); err != nil {
 				log.Fatal(err)
+				break
 			}
 		}
 	}()
 
 	go func() {
-		var msg = make([]byte, 512)
-		var n int
-
-		for n, err = ws.Read(msg); err == nil; n, err = ws.Read(msg) {
-			output <- string(msg[:n])
-
+		defer func() {
+			close(output)
+			ws.Close()
+		}()
+		var msg string
+		for err := websocket.Message.Receive(ws, &msg); err == nil; err = websocket.Message.Receive(ws, &msg) {
+			output <- msg
 		}
 	}()
 
