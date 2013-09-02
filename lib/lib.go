@@ -26,11 +26,16 @@ func (self *Socknet) Connect(origin string, location string, header http.Header)
 	input = make(chan string)
 	output = make(chan string)
 
-	go func() {
+	closer := func() {
 		defer func() {
-			close(output)
-			ws.Close()
+			recover()
 		}()
+		close(output)
+		ws.Close()
+	}
+
+	go func() {
+		defer closer()
 		for mess := range input {
 			if err := websocket.Message.Send(ws, mess); err != nil {
 				log.Fatal(err)
@@ -40,10 +45,7 @@ func (self *Socknet) Connect(origin string, location string, header http.Header)
 	}()
 
 	go func() {
-		defer func() {
-			close(output)
-			ws.Close()
-		}()
+		defer closer()
 		var msg string
 		for err := websocket.Message.Receive(ws, &msg); err == nil; err = websocket.Message.Receive(ws, &msg) {
 			output <- msg
