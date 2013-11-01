@@ -10,7 +10,7 @@ import (
 type Socknet struct {
 }
 
-func (self *Socknet) Connect(origin string, location string, header http.Header) (input chan string, output chan string, err error) {
+func (self *Socknet) Connect(origin string, location string, header http.Header) (chan<- string, <-chan string, error) {
 
 	config := &websocket.Config{
 		Location: parseUrl(location),
@@ -20,11 +20,12 @@ func (self *Socknet) Connect(origin string, location string, header http.Header)
 	}
 
 	var ws *websocket.Conn
+	var err error
 	if ws, err = websocket.DialConfig(config); err != nil {
-		return
+		return nil, nil, err
 	}
-	input = make(chan string)
-	output = make(chan string)
+	input := make(chan string)
+	output := make(chan string)
 
 	closer := func() {
 		defer func() {
